@@ -1,25 +1,6 @@
 # main.tf
-# AWS Network Firewall - Single Zone Architecture
+# AWS Network Firewall - Single Zone Architecture (Public Subnet)
 # Main infrastructure resources
-
-terraform {
-  required_version = ">= 1.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = local.common_tags
-  }
-}
 
 #------------------------------------------------------------------------------
 # VPC
@@ -54,71 +35,58 @@ resource "aws_subnet" "firewall" {
   tags = local.firewall_subnet_tags
 }
 
-# NAT Gateway Subnet - hosts the NAT Gateway for outbound traffic
-resource "aws_subnet" "nat" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = local.nat_subnet_cidr
-  availability_zone = local.availability_zone
-
-  tags = local.nat_subnet_tags
-}
-
-# Customer Subnet - hosts customer workloads
+# Customer Subnet - hosts customer workloads (public subnet)
 resource "aws_subnet" "customer" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = local.customer_subnet_cidr
   availability_zone       = local.availability_zone
-  map_public_ip_on_launch = false # Private subnet, uses NAT Gateway
+  map_public_ip_on_launch = true # Public subnet for public-facing instances
 
   tags = local.customer_subnet_tags
 }
 
 #------------------------------------------------------------------------------
-# Elastic IP for NAT Gateway
+# Elastic IP for EC2 Instance
 #------------------------------------------------------------------------------
-resource "aws_eip" "nat" {
+resource "aws_eip" "ec2" {
   domain = "vpc"
 
   tags = merge(
     local.common_tags,
     {
-      Name = "${local.project_name}-nat-eip"
+      Name = "${local.project_name}-ec2-eip"
     }
   )
 
   depends_on = [aws_internet_gateway.main]
 }
 
-#------------------------------------------------------------------------------
-# NAT Gateway
-#------------------------------------------------------------------------------
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.nat.id
-
-  tags = local.nat_gateway_tags
-
-  depends_on = [aws_internet_gateway.main]
+resource "aws_eip_association" "ec2" {
+  instance_id   = aws_instance.test.id
+  allocation_id = aws_eip.ec2.id
 }
 
 #------------------------------------------------------------------------------
 # Network Firewall Policy - Stateful Rule Groups
 #------------------------------------------------------------------------------
 
-# Stateful rule group for allowing standard outbound traffic
-resource "aws_networkfirewall_rule_group" "allow_outbound" {
+# Stateful rule group for allowing standard traffic
+resource "aws_networkfirewall_rule_group" "allow_traffic" {
   capacity = 100
-  name     = "${local.project_name}-allow-outbound"
+  name     = "${local.project_name}-allow-traffic"
   type     = "STATEFUL"
 
   rule_group {
+    stateful_rule_options {
+      rule_order = "STRICT_ORDER"
+    }
     rules_source {
       stateful_rule {
         action = "PASS"
         header {
           destination      = "ANY"
           destination_port = "443"
-          direction        = "FORWARD"
+          direction        = "ANY"
           protocol         = "TCP"
           source           = "ANY"
           source_port      = "ANY"
@@ -134,7 +102,7 @@ resource "aws_networkfirewall_rule_group" "allow_outbound" {
         header {
           destination      = "ANY"
           destination_port = "80"
-          direction        = "FORWARD"
+          direction        = "ANY"
           protocol         = "TCP"
           source           = "ANY"
           source_port      = "ANY"
@@ -150,7 +118,7 @@ resource "aws_networkfirewall_rule_group" "allow_outbound" {
         header {
           destination      = "ANY"
           destination_port = "53"
-          direction        = "FORWARD"
+          direction        = "ANY"
           protocol         = "UDP"
           source           = "ANY"
           source_port      = "ANY"
@@ -166,7 +134,7 @@ resource "aws_networkfirewall_rule_group" "allow_outbound" {
         header {
           destination      = "ANY"
           destination_port = "53"
-          direction        = "FORWARD"
+          direction        = "ANY"
           protocol         = "TCP"
           source           = "ANY"
           source_port      = "ANY"
@@ -182,7 +150,7 @@ resource "aws_networkfirewall_rule_group" "allow_outbound" {
         header {
           destination      = "ANY"
           destination_port = "ANY"
-          direction        = "FORWARD"
+          direction        = "ANY"
           protocol         = "ICMP"
           source           = "ANY"
           source_port      = "ANY"
@@ -192,13 +160,29 @@ resource "aws_networkfirewall_rule_group" "allow_outbound" {
           settings = ["5"]
         }
       }
+
+      stateful_rule {
+        action = "PASS"
+        header {
+          destination      = "ANY"
+          destination_port = "22"
+          direction        = "ANY"
+          protocol         = "TCP"
+          source           = "ANY"
+          source_port      = "ANY"
+        }
+        rule_option {
+          keyword  = "sid"
+          settings = ["6"]
+        }
+      }
     }
   }
 
   tags = merge(
     local.common_tags,
     {
-      Name = "${local.project_name}-allow-outbound-rules"
+      Name = "${local.project_name}-allow-traffic-rules"
     }
   )
 }
@@ -210,6 +194,9 @@ resource "aws_networkfirewall_rule_group" "drop_all" {
   type     = "STATEFUL"
 
   rule_group {
+    stateful_rule_options {
+      rule_order = "STRICT_ORDER"
+    }
     rules_source {
       stateful_rule {
         action = "DROP"
@@ -249,7 +236,7 @@ resource "aws_networkfirewall_firewall_policy" "main" {
 
     stateful_rule_group_reference {
       priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.allow_outbound.arn
+      resource_arn = aws_networkfirewall_rule_group.allow_traffic.arn
     }
 
     stateful_rule_group_reference {
@@ -368,12 +355,6 @@ locals {
 resource "aws_route_table" "igw" {
   vpc_id = aws_vpc.main.id
 
-  # Route for NAT subnet traffic through firewall
-  route {
-    cidr_block      = local.nat_subnet_cidr
-    vpc_endpoint_id = local.firewall_endpoint_id
-  }
-
   # Route for customer subnet traffic through firewall
   route {
     cidr_block      = local.customer_subnet_cidr
@@ -393,7 +374,7 @@ resource "aws_route_table_association" "igw" {
 resource "aws_route_table" "firewall" {
   vpc_id = aws_vpc.main.id
 
-  # Local route is automatically created
+  # Route to internet via IGW
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
@@ -407,32 +388,14 @@ resource "aws_route_table_association" "firewall" {
   route_table_id = aws_route_table.firewall.id
 }
 
-# NAT Gateway Subnet Route Table
-resource "aws_route_table" "nat" {
-  vpc_id = aws_vpc.main.id
-
-  # Route to internet through firewall
-  route {
-    cidr_block      = "0.0.0.0/0"
-    vpc_endpoint_id = local.firewall_endpoint_id
-  }
-
-  tags = local.nat_route_table_tags
-}
-
-resource "aws_route_table_association" "nat" {
-  subnet_id      = aws_subnet.nat.id
-  route_table_id = aws_route_table.nat.id
-}
-
-# Customer Subnet Route Table
+# Customer Subnet Route Table - routes through firewall
 resource "aws_route_table" "customer" {
   vpc_id = aws_vpc.main.id
 
-  # Route to internet through NAT Gateway
+  # Route to internet through firewall endpoint
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
+    cidr_block      = "0.0.0.0/0"
+    vpc_endpoint_id = local.firewall_endpoint_id
   }
 
   tags = local.customer_route_table_tags
@@ -501,7 +464,7 @@ resource "aws_security_group" "customer" {
 }
 
 #------------------------------------------------------------------------------
-# EC2 Test Instance
+# EC2 Test Instance (Public-facing Web Server)
 #------------------------------------------------------------------------------
 resource "aws_instance" "test" {
   ami                    = local.ec2_ami_id
@@ -537,7 +500,6 @@ resource "aws_instance" "test" {
   depends_on = [
     aws_internet_gateway.main,
     aws_networkfirewall_firewall.main,
-    aws_nat_gateway.main,
     aws_route_table_association.customer
   ]
 }

@@ -22,11 +22,6 @@ output "firewall_subnet_id" {
   value       = aws_subnet.firewall.id
 }
 
-output "nat_subnet_id" {
-  description = "ID of the NAT gateway subnet"
-  value       = aws_subnet.nat.id
-}
-
 output "customer_subnet_id" {
   description = "ID of the customer subnet"
   value       = aws_subnet.customer.id
@@ -38,16 +33,6 @@ output "customer_subnet_id" {
 output "internet_gateway_id" {
   description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.main.id
-}
-
-output "nat_gateway_id" {
-  description = "ID of the NAT Gateway"
-  value       = aws_nat_gateway.main.id
-}
-
-output "nat_gateway_public_ip" {
-  description = "Public IP address of the NAT Gateway"
-  value       = aws_eip.nat.public_ip
 }
 
 #------------------------------------------------------------------------------
@@ -86,11 +71,6 @@ output "firewall_route_table_id" {
   value       = aws_route_table.firewall.id
 }
 
-output "nat_route_table_id" {
-  description = "ID of the NAT subnet route table"
-  value       = aws_route_table.nat.id
-}
-
 output "customer_route_table_id" {
   description = "ID of the customer subnet route table"
   value       = aws_route_table.customer.id
@@ -102,6 +82,11 @@ output "customer_route_table_id" {
 output "ec2_instance_id" {
   description = "ID of the test EC2 instance"
   value       = aws_instance.test.id
+}
+
+output "ec2_public_ip" {
+  description = "Public IP address (Elastic IP) of the EC2 instance"
+  value       = aws_eip.ec2.public_ip
 }
 
 output "ec2_private_ip" {
@@ -143,9 +128,14 @@ output "cloudwatch_alert_log_group" {
 #------------------------------------------------------------------------------
 # Connectivity Outputs
 #------------------------------------------------------------------------------
+output "web_url" {
+  description = "URL to access the web server"
+  value       = "http://${aws_eip.ec2.public_ip}"
+}
+
 output "ssh_command" {
-  description = "SSH command to connect to the instance via NAT (requires bastion or SSM)"
-  value       = var.key_name != "" ? "ssh -i ${var.key_name}.pem ec2-user@${aws_instance.test.private_ip}" : "No SSH key configured - use SSM Session Manager"
+  description = "SSH command to connect to the instance"
+  value       = var.key_name != "" ? "ssh -i ${var.key_name}.pem ec2-user@${aws_eip.ec2.public_ip}" : "No SSH key configured"
 }
 
 output "availability_zone" {
@@ -175,11 +165,10 @@ output "architecture_summary" {
   value = {
     vpc_cidr             = local.vpc_cidr
     firewall_subnet_cidr = local.firewall_subnet_cidr
-    nat_subnet_cidr      = local.nat_subnet_cidr
     customer_subnet_cidr = local.customer_subnet_cidr
     availability_zone    = local.availability_zone
     firewall_endpoint    = local.firewall_endpoint_id
-    nat_gateway_ip       = aws_eip.nat.public_ip
+    ec2_public_ip        = aws_eip.ec2.public_ip
   }
 }
 
@@ -188,10 +177,10 @@ output "architecture_summary" {
 #------------------------------------------------------------------------------
 output "traffic_flow_outbound" {
   description = "Outbound traffic flow path"
-  value       = "Customer Subnet (${local.customer_subnet_cidr}) → NAT Gateway (${aws_eip.nat.public_ip}) → Firewall Endpoint (${local.firewall_endpoint_id}) → IGW → Internet"
+  value       = "EC2 (${local.customer_subnet_cidr}) → Firewall Endpoint (${local.firewall_endpoint_id}) → IGW → Internet"
 }
 
 output "traffic_flow_inbound" {
-  description = "Inbound traffic flow path (return traffic)"
-  value       = "Internet → IGW → Firewall Endpoint (${local.firewall_endpoint_id}) → NAT Subnet → Customer Subnet (${local.customer_subnet_cidr})"
+  description = "Inbound traffic flow path"
+  value       = "Internet → IGW → Firewall Endpoint (${local.firewall_endpoint_id}) → EC2 (${aws_eip.ec2.public_ip})"
 }

@@ -58,16 +58,10 @@ variable "firewall_subnet_cidr" {
   default     = "10.0.4.0/28"
 }
 
-variable "nat_subnet_cidr" {
-  description = "CIDR block for NAT gateway subnet"
+variable "customer_subnet_cidr" {
+  description = "CIDR block for customer subnet (public)"
   type        = string
   default     = "10.0.2.0/24"
-}
-
-variable "customer_subnet_cidr" {
-  description = "CIDR block for customer subnet"
-  type        = string
-  default     = "10.0.3.0/24"
 }
 
 variable "instance_type" {

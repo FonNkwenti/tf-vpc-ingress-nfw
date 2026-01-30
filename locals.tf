@@ -8,7 +8,6 @@ locals {
   # Network configuration
   vpc_cidr             = var.vpc_cidr
   firewall_subnet_cidr = var.firewall_subnet_cidr
-  nat_subnet_cidr      = var.nat_subnet_cidr
   customer_subnet_cidr = var.customer_subnet_cidr
 
   # Select first available AZ for single-zone deployment
@@ -52,22 +51,13 @@ locals {
     }
   )
 
-  nat_subnet_tags = merge(
-    local.common_tags,
-    {
-      Name       = "${local.project_name}-nat-subnet"
-      SubnetType = "NAT"
-      CIDR       = local.nat_subnet_cidr
-    }
-  )
-
   customer_subnet_tags = merge(
     local.common_tags,
     {
       Name       = "${local.project_name}-customer-subnet"
       SubnetType = "Customer"
       CIDR       = local.customer_subnet_cidr
-      PublicIP   = "Disabled"
+      PublicIP   = "Enabled"
     }
   )
 
@@ -76,14 +66,6 @@ locals {
     {
       Name         = "${local.project_name}-igw"
       ResourceType = "InternetGateway"
-    }
-  )
-
-  nat_gateway_tags = merge(
-    local.common_tags,
-    {
-      Name         = "${local.project_name}-nat-gw"
-      ResourceType = "NATGateway"
     }
   )
 
@@ -99,7 +81,7 @@ locals {
   ec2_tags = merge(
     local.common_tags,
     {
-      Name         = "${local.project_name}-test-instance"
+      Name         = "${local.project_name}-webserver"
       ResourceType = "EC2Instance"
       Role         = "WebServer"
       AMI          = local.ec2_ami_id
@@ -122,15 +104,6 @@ locals {
       Name           = "${local.project_name}-firewall-rt"
       RouteTableType = "FirewallSubnet"
       AssociatedWith = "FirewallSubnet"
-    }
-  )
-
-  nat_route_table_tags = merge(
-    local.common_tags,
-    {
-      Name           = "${local.project_name}-nat-rt"
-      RouteTableType = "NATSubnet"
-      AssociatedWith = "NATSubnet"
     }
   )
 
