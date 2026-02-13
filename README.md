@@ -1,127 +1,140 @@
-# AWS Network Firewall - Single Zone Architecture (Public Subnet)
+# VPC Ingress Routing with AWS Network Firewall
 
-This Terraform project deploys a single Availability Zone AWS VPC architecture with integrated Network Firewall to inspect and control traffic between a public-facing customer subnet and the internet.
+Single Availability Zone architecture demonstrating VPC Ingress Routing with inline traffic inspection via AWS Network Firewall. All traffic between the internet and the web server passes through the firewall endpoint in both directions.
 
-## Architecture Overview
+## Architecture
 
 ```
-                              ┌─────────────────────────────────────────────────────────┐
-                              │                    VPC: 10.0.0.0/16                     │
-                              │                                                         │
-    ┌───────────────┐         │  ┌─────────────────────────────────────────────────┐   │
-    │   Internet    │         │  │           Firewall Subnet (10.0.4.0/28)         │   │
-    │    Gateway    │◄────────┼──│                                                  │   │
-    │  (igw-xxxx)   │         │  │    ┌─────────────────────────────────────────┐  │   │
-    └───────┬───────┘         │  │    │   Network Firewall Endpoint (vpce-xxxx) │  │   │
-            │                 │  │    └─────────────────────────────────────────┘  │   │
-            │                 │  └─────────────────────────────────────────────────┘   │
-            │                 │                          │                              │
-            │                 │                          ▼                              │
-            │                 │  ┌─────────────────────────────────────────────────┐   │
-            │                 │  │         Customer Subnet (10.0.2.0/24)           │   │
-            │                 │  │                  (Public Subnet)                 │   │
-            │                 │  │    ┌─────────────────────────────────────────┐  │   │
-            │                 │  │    │        EC2 Web Server (Elastic IP)      │  │   │
-            │                 │  │    └─────────────────────────────────────────┘  │   │
-            │                 │  └─────────────────────────────────────────────────┘   │
-            │                 │                                                         │
-            │                 └─────────────────────────────────────────────────────────┘
-            │                                       Availability Zone 1
-            └───────────────────────────────────────────────────────────────────────────
+                          ┌──────────────────────────────────────────────────┐
+                          │                  VPC: 10.0.0.0/16                │
+                          │                                                  │
+  ┌──────────────┐        │  ┌────────────────────────────────────────────┐  │
+  │   Internet   │        │  │         Firewall Subnet (10.0.4.0/28)      │  │
+  │   Gateway    │◄───────┼──│   Network Firewall Endpoint (vpce-xxxx)    │  │
+  └──────┬───────┘        │  └────────────────────────────────────────────┘  │
+         │                │                        │                         │
+         │ IGW RT:         │                        ▼                         │
+         │ 10.0.2.0/24    │  ┌────────────────────────────────────────────┐  │
+         │ → NFW endpoint  │  │        WebServer Subnet (10.0.2.0/24)      │  │
+         │                │  │   EC2 Web Server (Graviton, Elastic IP)    │  │
+         └────────────────┼──│   WebServer RT: 0.0.0.0/0 → NFW endpoint  │  │
+                          │  └────────────────────────────────────────────┘  │
+                          └──────────────────────────────────────────────────┘
 ```
 
 ## Traffic Flow
 
-### Outbound Traffic (EC2 → Internet)
-1. EC2 instance initiates connection to internet
-2. Traffic matches 0.0.0.0/0 in customer route table → Firewall Endpoint
-3. Network Firewall inspects traffic against policies
-4. If allowed, traffic forwarded to IGW (via firewall route table)
-5. IGW routes to internet
+**Inbound**: Internet → IGW → (IGW RT intercepts webserver CIDR) → NFW endpoint → EC2
 
-### Inbound Traffic (Internet → EC2)
-1. Traffic arrives at IGW destined for EC2's Elastic IP
-2. IGW route table directs 10.0.2.0/24 traffic → Firewall Endpoint
-3. Network Firewall inspects inbound traffic
-4. If allowed, traffic forwarded to EC2 instance
+**Outbound**: EC2 → (WebServer RT) → NFW endpoint → (Firewall RT) → IGW → Internet
 
 ## Route Tables
 
 | Route Table | Destination | Target |
-|-------------|-------------|--------|
-| **IGW RT** | 10.0.2.0/24 | Firewall Endpoint |
-| **Firewall RT** | 10.0.0.0/16 | local |
-| **Firewall RT** | 0.0.0.0/0 | IGW |
-| **Customer RT** | 10.0.0.0/16 | local |
-| **Customer RT** | 0.0.0.0/0 | Firewall Endpoint |
+|---|---|---|
+| IGW RT | 10.0.2.0/24 | NFW endpoint |
+| Firewall RT | 0.0.0.0/0 | IGW |
+| WebServer RT | 0.0.0.0/0 | NFW endpoint |
+
+## Firewall Policy (STRICT_ORDER)
+
+| Priority | Action | Protocol | Port |
+|---|---|---|---|
+| 1 | PASS | TCP | 443 |
+| 1 | PASS | TCP | 80 |
+| 1 | PASS | UDP | 53 |
+| 1 | PASS | TCP | 53 |
+| 1 | PASS | ICMP | ANY |
+| 100 | DROP | IP | ANY |
 
 ## Quick Start
 
 ```bash
-# Initialize
 terraform init
-
-# Review changes
 terraform plan
-
-# Deploy
 terraform apply
+```
 
-# Get web server URL
-terraform output web_url
+After deploy:
 
-# SSH to instance
-eval $(terraform output -raw ssh_command)
+```bash
+# Access the web server
+curl http://$(terraform output -raw webserver_public_ip)
+
+# Connect via EC2 Instance Connect (no SSH key required)
+$(terraform output -raw ec2_instance_connect_command)
 ```
 
 ## Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
-| `project_name` | Project name | `network-firewall` |
+|---|---|---|
+| `project_name` | Project name | `vpc-ingress-nfw` |
 | `environment` | Environment (dev/staging/prod) | `dev` |
 | `aws_region` | AWS region | `us-east-1` |
 | `vpc_cidr` | VPC CIDR block | `10.0.0.0/16` |
 | `firewall_subnet_cidr` | Firewall subnet CIDR | `10.0.4.0/28` |
-| `customer_subnet_cidr` | Customer subnet CIDR | `10.0.2.0/24` |
-| `instance_type` | EC2 instance type | `t3.micro` |
-| `key_name` | SSH key pair name | `""` |
+| `webserver_subnet_cidr` | WebServer subnet CIDR | `10.0.2.0/24` |
+| `instance_type` | EC2 instance type (ARM/Graviton) | `t4g.micro` |
+| `enable_deletion_protection` | NFW deletion protection | `false` |
+| `firewall_policy_name` | Network Firewall policy name | `network-firewall-policy` |
+| `enable_firewall_logs` | Enable NFW flow logs to CloudWatch | `true` |
+| `enable_alert_logs` | Enable NFW alert logs to CloudWatch | `true` |
+| `log_retention_days` | CloudWatch log retention (days) | `30` |
+| `enable_monitoring_dashboard` | Enable CloudWatch dashboard and alarms | `true` |
+| `alarm_sns_topic_arn` | SNS topic ARN for CloudWatch alarms | `""` |
 
-## Firewall Policy
+## Outputs
 
-**Allowed Traffic (PASS)**:
-- HTTPS (443), HTTP (80), SSH (22)
-- DNS (53 UDP/TCP)
-- ICMP (ping)
+| Output | Description |
+|---|---|
+| `webserver_instance_id` | EC2 instance ID |
+| `webserver_public_ip` | Elastic IP address |
+| `webserver_private_ip` | Private IP address |
+| `web_url` | HTTP URL to access the web server |
+| `ec2_instance_connect_command` | AWS CLI command to connect via EC2 Instance Connect |
 
-**Blocked Traffic (DROP)**:
-- All other traffic
+## Monitoring
 
-## Testing
+When `enable_monitoring_dashboard = true`, the following are deployed:
 
-After deployment:
+- **CloudWatch Dashboard** — packets processed/dropped (stateless + stateful), connections
+- **Alarm**: stateless packets dropped > 100 in 5 min
+- **Alarm**: stateful packets dropped > 50 in 5 min
+
+Firewall logs ship to CloudWatch Log Groups:
+- `/aws/networkfirewall/<project>/flow`
+- `/aws/networkfirewall/<project>/alert`
+
+## Reachability Testing
+
+`reachability-egress-test.sh` uses AWS Network Insights to verify the egress path (EC2 → NFW endpoint → IGW → 8.8.8.8:443) is network-reachable.
+
 ```bash
-# Access web server from internet
-curl http://$(terraform output -raw ec2_public_ip)
+./reachability-egress-test.sh
 
-# SSH to instance and test outbound
-ssh -i your-key.pem ec2-user@$(terraform output -raw ec2_public_ip)
-curl -I https://www.amazon.com
+# Options
+./reachability-egress-test.sh --region eu-west-1 --dest-ip 1.1.1.1 --port 80 --output-file result.json
 ```
+
+The script resolves the EC2 ENI and IGW automatically from the instance ID, starts a Network Insights Analysis, polls for completion, and saves the full result to JSON.
+
+> **Note**: Reachability Analyzer validates routing and security group rules only. NFW stateful rule evaluation requires live traffic testing via `curl` and CloudWatch NFW logs.
 
 ## Files
 
 ```
 .
-├── provider.tf       # Terraform & AWS provider config
-├── main.tf           # Infrastructure resources
-├── variables.tf      # Variable definitions
-├── terraform.tfvars  # Variable values
-├── locals.tf         # Computed values and tags
-├── data.tf           # Data sources
-├── outputs.tf        # Output values
-├── user-data.sh      # EC2 user data script
-└── README.md         # This file
+├── main.tf                    # VPC, subnets, IGW, EIP, route tables, security group, EC2
+├── network_firewall.tf        # NFW policy, rules, firewall, logging, dashboard, alarms
+├── variables.tf               # Variable definitions
+├── locals.tf                  # Computed locals and resource tags
+├── data.tf                    # AMI and availability zone data sources
+├── outputs.tf                 # Terraform outputs
+├── provider.tf                # Terraform and AWS provider config
+├── terraform.tfvars           # Variable values
+├── user-data.sh               # EC2 bootstrap: Apache web server setup
+└── reachability-egress-test.sh  # Network Insights egress reachability test
 ```
 
 ## Cleanup
@@ -129,7 +142,3 @@ curl -I https://www.amazon.com
 ```bash
 terraform destroy
 ```
-
-## License
-
-MIT License
