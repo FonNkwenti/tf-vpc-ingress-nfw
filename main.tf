@@ -74,7 +74,7 @@ locals {
 }
 
 # IGW Route Table - Routes inbound traffic to firewall
-resource "aws_route_table" "igw" {
+resource "aws_route_table" "igw_ingress_rt" {
   vpc_id = aws_vpc.main.id
 
   # Route for webserver subnet traffic through firewall (VPC Ingress Routing)
@@ -87,13 +87,13 @@ resource "aws_route_table" "igw" {
 }
 
 # Associate IGW route table with Internet Gateway (edge association)
-resource "aws_route_table_association" "igw" {
+resource "aws_route_table_association" "igw_ingress_association" {
   gateway_id     = aws_internet_gateway.main.id
-  route_table_id = aws_route_table.igw.id
+  route_table_id = aws_route_table.igw_ingress_rt.id
 }
 
 # Firewall Subnet Route Table
-resource "aws_route_table" "firewall" {
+resource "aws_route_table" "firewall_rt" {
   vpc_id = aws_vpc.main.id
 
   # Route to internet via IGW
@@ -105,13 +105,13 @@ resource "aws_route_table" "firewall" {
   tags = local.firewall_route_table_tags
 }
 
-resource "aws_route_table_association" "firewall" {
+resource "aws_route_table_association" "firewall_rt_association" {
   subnet_id      = aws_subnet.firewall.id
-  route_table_id = aws_route_table.firewall.id
+  route_table_id = aws_route_table.firewall_rt.id
 }
 
 
-resource "aws_route_table" "webserver" {
+resource "aws_route_table" "webserver_rt" {
   vpc_id = aws_vpc.main.id
 
   # Route to internet through firewall endpoint
@@ -123,9 +123,9 @@ resource "aws_route_table" "webserver" {
   tags = local.webserver_route_table_tags
 }
 
-resource "aws_route_table_association" "webserver" {
+resource "aws_route_table_association" "webserver_rt_association" {
   subnet_id      = aws_subnet.webserver.id
-  route_table_id = aws_route_table.webserver.id
+  route_table_id = aws_route_table.webserver_rt.id
 }
 
 #------------------------------------------------------------------------------
@@ -256,6 +256,6 @@ resource "aws_instance" "webserver" {
   depends_on = [
     aws_internet_gateway.main,
     aws_networkfirewall_firewall.main,
-    aws_route_table_association.webserver
+    aws_route_table_association.webserver_rt_association
   ]
 }

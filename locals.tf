@@ -1,5 +1,3 @@
-# Local values and computed data for VPC Ingress Routing demo
-
 locals {
   # Project metadata
   project_name = "${var.project_name}-${var.environment}"

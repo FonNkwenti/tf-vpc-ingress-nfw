@@ -108,16 +108,33 @@ Firewall logs ship to CloudWatch Log Groups:
 
 ## Reachability Testing
 
-`reachability-egress-test.sh` uses AWS Network Insights to verify the egress path (EC2 → NFW endpoint → IGW → 8.8.8.8:443) is network-reachable.
+Two scripts use AWS Network Insights to verify both egress and ingress paths:
+
+### Egress Test
+`reachability-egress-test.sh` verifies: **EC2 ENI → NFW endpoint → IGW → 8.8.8.8:443**
 
 ```bash
 ./reachability-egress-test.sh
 
 # Options
-./reachability-egress-test.sh --region eu-west-1 --dest-ip 1.1.1.1 --port 80 --output-file result.json
+./reachability-egress-test.sh --region eu-west-1 --dest-ip 1.1.1.1 --port 443 --output-file result.json
 ```
 
-The script resolves the EC2 ENI and IGW automatically from the instance ID, starts a Network Insights Analysis, polls for completion, and saves the full result to JSON.
+Output: `nia-egress-result.json`
+
+### Ingress Test
+`reachability-ingress-test.sh` verifies: **IGW → NFW endpoint → EC2 ENI (port 80)**
+
+```bash
+./reachability-ingress-test.sh
+
+# Options
+./reachability-ingress-test.sh --region eu-west-1 --port 443 --output-file result.json
+```
+
+Output: `nia-ingress-result.json`
+
+Both scripts auto-resolve the EC2 ENI and IGW from the instance ID, start a Network Insights Analysis, poll for completion, and save the full result to JSON for review.
 
 > **Note**: Reachability Analyzer validates routing and security group rules only. NFW stateful rule evaluation requires live traffic testing via `curl` and CloudWatch NFW logs.
 
@@ -125,16 +142,18 @@ The script resolves the EC2 ENI and IGW automatically from the instance ID, star
 
 ```
 .
-├── main.tf                    # VPC, subnets, IGW, EIP, route tables, security group, EC2
-├── network_firewall.tf        # NFW policy, rules, firewall, logging, dashboard, alarms
-├── variables.tf               # Variable definitions
-├── locals.tf                  # Computed locals and resource tags
-├── data.tf                    # AMI and availability zone data sources
-├── outputs.tf                 # Terraform outputs
-├── provider.tf                # Terraform and AWS provider config
-├── terraform.tfvars           # Variable values
-├── user-data.sh               # EC2 bootstrap: Apache web server setup
-└── reachability-egress-test.sh  # Network Insights egress reachability test
+├── main.tf                         # VPC, subnets, IGW, EIP, route tables, security group, EC2
+├── network_firewall.tf             # NFW policy, rules, firewall, logging, dashboard, alarms
+├── variables.tf                    # Variable definitions
+├── locals.tf                       # Computed locals and resource tags
+├── data.tf                         # AMI and availability zone data sources
+├── outputs.tf                      # Terraform outputs
+├── provider.tf                     # Terraform and AWS provider config
+├── terraform.tfvars                # Variable values
+├── user-data.sh                    # EC2 bootstrap: Apache web server setup
+├── reachability-egress-test.sh     # Network Insights egress path test (EC2 → IGW)
+├── reachability-ingress-test.sh    # Network Insights ingress path test (IGW → EC2)
+└── README.md                       # This file
 ```
 
 ## Cleanup

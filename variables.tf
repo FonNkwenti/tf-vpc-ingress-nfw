@@ -4,7 +4,7 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "vpc-ingress-nfw"
+  default     = "terraform_project"
 
   validation {
     condition     = length(var.project_name) > 0 && length(var.project_name) <= 50
