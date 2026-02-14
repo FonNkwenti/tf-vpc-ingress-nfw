@@ -1,6 +1,3 @@
-# provider.tf
-# Terraform and provider configuration
-
 terraform {
   required_version = ">= 1.0"
 

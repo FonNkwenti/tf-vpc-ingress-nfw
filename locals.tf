@@ -1,22 +1,17 @@
-# locals.tf
-# Local values and computed data
+# Local values and computed data for VPC Ingress Routing demo
 
 locals {
   # Project metadata
   project_name = "${var.project_name}-${var.environment}"
 
-  # Network configuration
-  vpc_cidr             = var.vpc_cidr
-  firewall_subnet_cidr = var.firewall_subnet_cidr
-  customer_subnet_cidr = var.customer_subnet_cidr
+  vpc_cidr              = var.vpc_cidr
+  firewall_subnet_cidr  = var.firewall_subnet_cidr
+  webserver_subnet_cidr = var.webserver_subnet_cidr
 
-  # Select first available AZ for single-zone deployment
   availability_zone = data.aws_availability_zones.available.names[0]
 
-  # AMI ID from data source
-  ec2_ami_id = data.aws_ami.amazon_linux_2023.id
+  ec2_ami_id = data.aws_ami.amazon_linux_2023_arm.id
 
-  # Compute user data file path
   user_data_file = "${path.module}/user-data.sh"
 
   # Common tags applied to all resources
@@ -29,7 +24,7 @@ locals {
       DeploymentDate = formatdate("YYYY-MM-DD", timestamp())
       Owner          = var.owner
       CostCenter     = var.cost_center
-      Architecture   = "single-zone-network-firewall"
+      Architecture   = "vpc-ingress-routing-demo"
     }
   )
 
@@ -51,12 +46,12 @@ locals {
     }
   )
 
-  customer_subnet_tags = merge(
+  webserver_subnet_tags = merge(
     local.common_tags,
     {
-      Name       = "${local.project_name}-customer-subnet"
-      SubnetType = "Customer"
-      CIDR       = local.customer_subnet_cidr
+      Name       = "${local.project_name}-webserver-subnet"
+      SubnetType = "WebServer"
+      CIDR       = local.webserver_subnet_cidr
       PublicIP   = "Enabled"
     }
   )
@@ -107,12 +102,12 @@ locals {
     }
   )
 
-  customer_route_table_tags = merge(
+  webserver_route_table_tags = merge(
     local.common_tags,
     {
-      Name           = "${local.project_name}-customer-rt"
-      RouteTableType = "CustomerSubnet"
-      AssociatedWith = "CustomerSubnet"
+      Name           = "${local.project_name}-webserver-rt"
+      RouteTableType = "WebServerSubnet"
+      AssociatedWith = "WebServerSubnet"
     }
   )
 
@@ -120,7 +115,7 @@ locals {
   security_group_tags = merge(
     local.common_tags,
     {
-      Name         = "${local.project_name}-customer-sg"
+      Name         = "${local.project_name}-webserver-sg"
       ResourceType = "SecurityGroup"
     }
   )

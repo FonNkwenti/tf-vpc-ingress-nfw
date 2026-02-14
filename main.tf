@@ -1,6 +1,4 @@
-# main.tf
-# AWS Network Firewall - Single Zone Architecture (Public Subnet)
-# Main infrastructure resources
+# VPC Ingress Routing Demo with Network Firewall
 
 #------------------------------------------------------------------------------
 # VPC
@@ -35,14 +33,14 @@ resource "aws_subnet" "firewall" {
   tags = local.firewall_subnet_tags
 }
 
-# Customer Subnet - hosts customer workloads (public subnet)
-resource "aws_subnet" "customer" {
+# WebServer Subnet - hosts the web server (public subnet)
+resource "aws_subnet" "webserver" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = local.customer_subnet_cidr
+  cidr_block              = local.webserver_subnet_cidr
   availability_zone       = local.availability_zone
   map_public_ip_on_launch = true # Public subnet for public-facing instances
 
-  tags = local.customer_subnet_tags
+  tags = local.webserver_subnet_tags
 }
 
 #------------------------------------------------------------------------------
@@ -62,291 +60,15 @@ resource "aws_eip" "ec2" {
 }
 
 resource "aws_eip_association" "ec2" {
-  instance_id   = aws_instance.test.id
+  instance_id   = aws_instance.webserver.id
   allocation_id = aws_eip.ec2.id
-}
-
-#------------------------------------------------------------------------------
-# Network Firewall Policy - Stateful Rule Groups
-#------------------------------------------------------------------------------
-
-# Stateful rule group for allowing standard traffic
-resource "aws_networkfirewall_rule_group" "allow_traffic" {
-  capacity = 100
-  name     = "${local.project_name}-allow-traffic"
-  type     = "STATEFUL"
-
-  rule_group {
-    stateful_rule_options {
-      rule_order = "STRICT_ORDER"
-    }
-    rules_source {
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "443"
-          direction        = "ANY"
-          protocol         = "TCP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["1"]
-        }
-      }
-
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "80"
-          direction        = "ANY"
-          protocol         = "TCP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["2"]
-        }
-      }
-
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "53"
-          direction        = "ANY"
-          protocol         = "UDP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["3"]
-        }
-      }
-
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "53"
-          direction        = "ANY"
-          protocol         = "TCP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["4"]
-        }
-      }
-
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "ANY"
-          direction        = "ANY"
-          protocol         = "ICMP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["5"]
-        }
-      }
-
-      stateful_rule {
-        action = "PASS"
-        header {
-          destination      = "ANY"
-          destination_port = "22"
-          direction        = "ANY"
-          protocol         = "TCP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["6"]
-        }
-      }
-    }
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.project_name}-allow-traffic-rules"
-    }
-  )
-}
-
-# Drop all other traffic (default deny)
-resource "aws_networkfirewall_rule_group" "drop_all" {
-  capacity = 10
-  name     = "${local.project_name}-drop-all"
-  type     = "STATEFUL"
-
-  rule_group {
-    stateful_rule_options {
-      rule_order = "STRICT_ORDER"
-    }
-    rules_source {
-      stateful_rule {
-        action = "DROP"
-        header {
-          destination      = "ANY"
-          destination_port = "ANY"
-          direction        = "FORWARD"
-          protocol         = "IP"
-          source           = "ANY"
-          source_port      = "ANY"
-        }
-        rule_option {
-          keyword  = "sid"
-          settings = ["100"]
-        }
-      }
-    }
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.project_name}-drop-all-rules"
-    }
-  )
-}
-
-#------------------------------------------------------------------------------
-# Network Firewall Policy
-#------------------------------------------------------------------------------
-resource "aws_networkfirewall_firewall_policy" "main" {
-  name = var.firewall_policy_name
-
-  firewall_policy {
-    stateless_default_actions          = ["aws:forward_to_sfe"]
-    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
-
-    stateful_rule_group_reference {
-      priority     = 1
-      resource_arn = aws_networkfirewall_rule_group.allow_traffic.arn
-    }
-
-    stateful_rule_group_reference {
-      priority     = 100
-      resource_arn = aws_networkfirewall_rule_group.drop_all.arn
-    }
-
-    stateful_engine_options {
-      rule_order = "STRICT_ORDER"
-    }
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.project_name}-firewall-policy"
-    }
-  )
-}
-
-#------------------------------------------------------------------------------
-# Network Firewall
-#------------------------------------------------------------------------------
-resource "aws_networkfirewall_firewall" "main" {
-  name                = "${local.project_name}-nfw"
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.main.arn
-  vpc_id              = aws_vpc.main.id
-
-  delete_protection                 = var.enable_deletion_protection
-  subnet_change_protection          = false
-  firewall_policy_change_protection = false
-
-  subnet_mapping {
-    subnet_id = aws_subnet.firewall.id
-  }
-
-  tags = local.firewall_tags
-}
-
-#------------------------------------------------------------------------------
-# CloudWatch Log Groups for Network Firewall
-#------------------------------------------------------------------------------
-resource "aws_cloudwatch_log_group" "firewall_flow_logs" {
-  count = var.enable_firewall_logs ? 1 : 0
-
-  name              = "/aws/networkfirewall/${local.project_name}/flow"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name    = "${local.project_name}-firewall-flow-logs"
-      LogType = "Flow"
-    }
-  )
-}
-
-resource "aws_cloudwatch_log_group" "firewall_alert_logs" {
-  count = var.enable_alert_logs ? 1 : 0
-
-  name              = "/aws/networkfirewall/${local.project_name}/alert"
-  retention_in_days = var.log_retention_days
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name    = "${local.project_name}-firewall-alert-logs"
-      LogType = "Alert"
-    }
-  )
-}
-
-#------------------------------------------------------------------------------
-# Network Firewall Logging Configuration
-#------------------------------------------------------------------------------
-resource "aws_networkfirewall_logging_configuration" "main" {
-  count = var.enable_firewall_logs || var.enable_alert_logs ? 1 : 0
-
-  firewall_arn = aws_networkfirewall_firewall.main.arn
-
-  logging_configuration {
-    dynamic "log_destination_config" {
-      for_each = var.enable_firewall_logs ? [1] : []
-      content {
-        log_destination = {
-          logGroup = aws_cloudwatch_log_group.firewall_flow_logs[0].name
-        }
-        log_destination_type = "CloudWatchLogs"
-        log_type             = "FLOW"
-      }
-    }
-
-    dynamic "log_destination_config" {
-      for_each = var.enable_alert_logs ? [1] : []
-      content {
-        log_destination = {
-          logGroup = aws_cloudwatch_log_group.firewall_alert_logs[0].name
-        }
-        log_destination_type = "CloudWatchLogs"
-        log_type             = "ALERT"
-      }
-    }
-  }
 }
 
 #------------------------------------------------------------------------------
 # Route Tables
 #------------------------------------------------------------------------------
 
-# Local for firewall endpoint ID
+# Local for firewall endpoint ID (defined after firewall is created)
 locals {
   firewall_endpoint_id = [for ep in aws_networkfirewall_firewall.main.firewall_status[0].sync_states : ep.attachment[0].endpoint_id][0]
 }
@@ -355,9 +77,9 @@ locals {
 resource "aws_route_table" "igw" {
   vpc_id = aws_vpc.main.id
 
-  # Route for customer subnet traffic through firewall
+  # Route for webserver subnet traffic through firewall (VPC Ingress Routing)
   route {
-    cidr_block      = local.customer_subnet_cidr
+    cidr_block      = local.webserver_subnet_cidr
     vpc_endpoint_id = local.firewall_endpoint_id
   }
 
@@ -388,8 +110,8 @@ resource "aws_route_table_association" "firewall" {
   route_table_id = aws_route_table.firewall.id
 }
 
-# Customer Subnet Route Table - routes through firewall
-resource "aws_route_table" "customer" {
+
+resource "aws_route_table" "webserver" {
   vpc_id = aws_vpc.main.id
 
   # Route to internet through firewall endpoint
@@ -398,30 +120,31 @@ resource "aws_route_table" "customer" {
     vpc_endpoint_id = local.firewall_endpoint_id
   }
 
-  tags = local.customer_route_table_tags
+  tags = local.webserver_route_table_tags
 }
 
-resource "aws_route_table_association" "customer" {
-  subnet_id      = aws_subnet.customer.id
-  route_table_id = aws_route_table.customer.id
+resource "aws_route_table_association" "webserver" {
+  subnet_id      = aws_subnet.webserver.id
+  route_table_id = aws_route_table.webserver.id
 }
 
 #------------------------------------------------------------------------------
 # Security Groups
 #------------------------------------------------------------------------------
 
-# Security Group for Customer Subnet instances
-resource "aws_security_group" "customer" {
-  name_prefix = "${local.project_name}-customer-sg-"
-  description = "Security group for customer subnet resources"
+# Security Group for WebServer Subnet instances
+resource "aws_security_group" "webserver" {
+  name_prefix = "${local.project_name}-webserver-sg-"
+  description = "Security group for webserver subnet resources"
   vpc_id      = aws_vpc.main.id
 
+  # For EC2Instance Connect on port 22 but from AWS service IPs
   ingress {
-    description = "SSH from allowed IPs"
+    description = "EC2 Instance Connect (SSH) from AWS IPs"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.ssh_allowed_cidr
+    cidr_blocks = ["18.206.107.24/29"] # EC2 Instance Connect IP range for us-east-1
   }
 
   ingress {
@@ -464,14 +187,47 @@ resource "aws_security_group" "customer" {
 }
 
 #------------------------------------------------------------------------------
-# EC2 Test Instance (Public-facing Web Server)
+# IAM Role for EC2 Instance Connect
 #------------------------------------------------------------------------------
-resource "aws_instance" "test" {
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ec2_instance_connect" {
+  name               = "${local.project_name}-ec2-instance-connect-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_instance_connect" {
+  role       = aws_iam_role.ec2_instance_connect.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2_instance_connect" {
+  name = "${local.project_name}-ec2-instance-connect-profile"
+  role = aws_iam_role.ec2_instance_connect.name
+
+  tags = local.common_tags
+}
+
+#------------------------------------------------------------------------------
+# EC2 Web Server Instance
+#------------------------------------------------------------------------------
+resource "aws_instance" "webserver" {
   ami                    = local.ec2_ami_id
   instance_type          = var.instance_type
-  key_name               = var.key_name != "" ? var.key_name : null
-  subnet_id              = aws_subnet.customer.id
-  vpc_security_group_ids = [aws_security_group.customer.id]
+  subnet_id              = aws_subnet.webserver.id
+  vpc_security_group_ids = [aws_security_group.webserver.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_instance_connect.name
 
   user_data = file(local.user_data_file)
 
@@ -500,6 +256,6 @@ resource "aws_instance" "test" {
   depends_on = [
     aws_internet_gateway.main,
     aws_networkfirewall_firewall.main,
-    aws_route_table_association.customer
+    aws_route_table_association.webserver
   ]
 }

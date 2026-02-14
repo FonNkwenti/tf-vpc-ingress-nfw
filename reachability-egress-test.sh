@@ -1,25 +1,13 @@
 #!/bin/bash
 # reachability-egress-test.sh
-#
+
 # Tests egress path from the EC2 webserver to an external IP (8.8.8.8)
 # using AWS Reachability Analyzer. Simulates outbound HTTPS traffic (port 443).
-#
-# The analyzer traces through the VPC route tables and models the full path:
-#   EC2 ENI → NFW endpoint → Firewall subnet → IGW → 8.8.8.8
-#
+
+
 # Usage:
 #   ./reachability-egress-test.sh [--region us-east-1] [--output-file results.json]
-#
-# Options:
-#   --region       AWS region (default: us-east-1)
-#   --output-file  JSON file to write the analysis result (default: nia-egress-result.json)
-#   --port         Destination port to test (default: 443)
-#   --dest-ip      Destination IP to test reachability to (default: 8.8.8.8)
-#
-# Requirements:
-#   - AWS CLI v2 configured with sufficient IAM permissions
-#   - Terraform state must exist (terraform output used to resolve resource IDs)
-#   - jq installed
+
 
 set -euo pipefail
 

@@ -1,7 +1,4 @@
-# outputs.tf
 # Output values for VPC Ingress Routing with Network Firewall Demo
-
-
 
 #------------------------------------------------------------------------------
 # EC2 Instance Outputs

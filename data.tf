@@ -1,14 +1,11 @@
-# data.tf
-# Data sources for dynamic resource lookups
 
-# Get the latest Amazon Linux 2023 AMI
-data "aws_ami" "amazon_linux_2023" {
+data "aws_ami" "amazon_linux_2023_arm" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
+    values = ["al2023-ami-2023.*-arm64"]
   }
 
   filter {
@@ -18,7 +15,7 @@ data "aws_ami" "amazon_linux_2023" {
 
   filter {
     name   = "architecture"
-    values = ["x86_64"]
+    values = ["arm64"]
   }
 
   filter {
@@ -27,13 +24,10 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# Get current AWS account ID
 data "aws_caller_identity" "current" {}
 
-# Get current AWS region
 data "aws_region" "current" {}
 
-# Get available AZs in the region
 data "aws_availability_zones" "available" {
   state = "available"
 }

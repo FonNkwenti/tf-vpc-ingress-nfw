@@ -1,21 +1,20 @@
 # terraform.tfvars
-# Environment-specific variable values
+# Environment-specific variable values for VPC Ingress Routing with Network Firewall Demo
 
 # Project identification
-project_name = "nfw-single-zone"
+project_name = "vpc-ingress-nfw"
 environment  = "dev"
 owner        = "cloud-infra@example.com"
 cost_center  = "security"
 
 # Network configuration
-aws_region           = "us-east-1"
-vpc_cidr             = "10.0.0.0/16"
-firewall_subnet_cidr = "10.0.4.0/28"
-customer_subnet_cidr = "10.0.2.0/24"
+aws_region            = "us-east-1"
+vpc_cidr              = "10.0.0.0/16"
+firewall_subnet_cidr  = "10.0.4.0/28"
+webserver_subnet_cidr = "10.0.2.0/24"
 
-# EC2 configuration
-instance_type = "t3.micro"
-key_name      = "default-use1" # Replace with your available key name
+# EC2 configuration - using ARM-based instance for cost savings
+instance_type = "t4g.micro"
 
 # Firewall configuration
 enable_deletion_protection = false
@@ -26,8 +25,9 @@ enable_firewall_logs = true
 enable_alert_logs    = true
 log_retention_days   = 30
 
-# Allowed IP for SSH (your IP address)
-ssh_allowed_cidr = ["0.0.0.0/0"] # Replace with your IP: ["1.2.3.4/32"]
+# Monitoring dashboard
+enable_monitoring_dashboard = true
+# alarm_sns_topic_arn         = "arn:aws:sns:us-east-1:123456789012:alerts" # Optional: SNS topic for alerts
 
 # Tags
 tags = {
