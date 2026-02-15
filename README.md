@@ -4,23 +4,7 @@ Single Availability Zone architecture demonstrating VPC Ingress Routing with inl
 
 ## Architecture
 
-```
-                          ┌──────────────────────────────────────────────────┐
-                          │                  VPC: 10.0.0.0/16                │
-                          │                                                  │
-  ┌──────────────┐        │  ┌────────────────────────────────────────────┐  │
-  │   Internet   │        │  │         Firewall Subnet (10.0.4.0/28)      │  │
-  │   Gateway    │◄───────┼──│   Network Firewall Endpoint (vpce-xxxx)    │  │
-  └──────┬───────┘        │  └────────────────────────────────────────────┘  │
-         │                │                        │                         │
-         │ IGW RT:         │                        ▼                         │
-         │ 10.0.2.0/24    │  ┌────────────────────────────────────────────┐  │
-         │ → NFW endpoint  │  │        WebServer Subnet (10.0.2.0/24)      │  │
-         │                │  │   EC2 Web Server (Graviton, Elastic IP)    │  │
-         └────────────────┼──│   WebServer RT: 0.0.0.0/0 → NFW endpoint  │  │
-                          │  └────────────────────────────────────────────┘  │
-                          └──────────────────────────────────────────────────┘
-```
+![vpc-ingress-nfw](vpc-ingress-nfw.png)
 
 ## Traffic Flow
 

@@ -138,7 +138,6 @@ resource "aws_security_group" "webserver" {
   description = "Security group for webserver subnet resources"
   vpc_id      = aws_vpc.main.id
 
-  # For EC2Instance Connect on port 22 but from AWS service IPs
   ingress {
     description = "EC2 Instance Connect (SSH) from AWS IPs"
     from_port   = 22

@@ -1,0 +1,708 @@
+{
+    "NetworkInsightsAnalyses": [
+        {
+            "NetworkInsightsAnalysisId": "nia-09c6f0ac7f611f3d6",
+            "NetworkInsightsAnalysisArn": "arn:aws:ec2:us-east-1:404148889442:network-insights-analysis/nia-09c6f0ac7f611f3d6",
+            "NetworkInsightsPathId": "nip-02c74412cddb20662",
+            "StartDate": "2026-02-14T15:40:49.012000+00:00",
+            "Status": "succeeded",
+            "NetworkPathFound": true,
+            "ForwardPathComponents": [
+                {
+                    "SequenceNumber": 1,
+                    "Component": {
+                        "Id": "igw-09ffb3709940e4dff",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:internet-gateway/igw-09ffb3709940e4dff",
+                        "Name": "vpc-ingress-nfw-dev-igw"
+                    },
+                    "OutboundHeader": {
+                        "DestinationAddresses": [
+                            "10.0.2.211/32"
+                        ]
+                    },
+                    "InboundHeader": {
+                        "DestinationAddresses": [
+                            "35.169.9.203/32"
+                        ],
+                        "DestinationPortRanges": [
+                            {
+                                "From": 80,
+                                "To": 80
+                            }
+                        ],
+                        "Protocol": "6",
+                        "SourceAddresses": [
+                            "0.0.0.0/5",
+                            "100.0.0.0/10",
+                            "100.128.0.0/9",
+                            "101.0.0.0/8",
+                            "102.0.0.0/7",
+                            "104.0.0.0/5",
+                            "11.0.0.0/8",
+                            "112.0.0.0/4",
+                            "12.0.0.0/6",
+                            "128.0.0.0/3",
+                            "16.0.0.0/4",
+                            "160.0.0.0/5",
+                            "168.0.0.0/6",
+                            "172.0.0.0/12",
+                            "172.128.0.0/9",
+                            "172.32.0.0/11",
+                            "172.64.0.0/10",
+                            "173.0.0.0/8",
+                            "174.0.0.0/7",
+                            "176.0.0.0/4",
+                            "192.0.0.0/9",
+                            "192.128.0.0/11",
+                            "192.160.0.0/13",
+                            "192.169.0.0/16",
+                            "192.170.0.0/15",
+                            "192.172.0.0/14",
+                            "192.176.0.0/12",
+                            "192.192.0.0/10",
+                            "193.0.0.0/8",
+                            "194.0.0.0/7",
+                            "196.0.0.0/6",
+                            "200.0.0.0/5",
+                            "208.0.0.0/4",
+                            "224.0.0.0/3",
+                            "32.0.0.0/3",
+                            "64.0.0.0/3",
+                            "8.0.0.0/7",
+                            "96.0.0.0/6"
+                        ],
+                        "SourcePortRanges": [
+                            {
+                                "From": 0,
+                                "To": 442
+                            },
+                            {
+                                "From": 444,
+                                "To": 65535
+                            }
+                        ]
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 2,
+                    "Component": {
+                        "Id": "rtb-00c6d258b8eee0fc7",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:route-table/rtb-00c6d258b8eee0fc7",
+                        "Name": "vpc-ingress-nfw-dev-igw-rt"
+                    },
+                    "RouteTableRoute": {
+                        "DestinationCidr": "10.0.2.0/24",
+                        "GatewayId": "vpce-0f450ec282d62fa5d",
+                        "Origin": "createroute",
+                        "State": "active"
+                    }
+                },
+                {
+                    "SequenceNumber": 3,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": false,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 4,
+                    "AttachedTo": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Component": {
+                        "Id": "eni-0751bf3dff0307daa",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0751bf3dff0307daa"
+                    },
+                    "Subnet": {
+                        "Id": "subnet-09dc31600429aa899",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-09dc31600429aa899",
+                        "Name": "vpc-ingress-nfw-dev-firewall-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 5,
+                    "Component": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    },
+                    "ServiceName": "com.amazonaws.vpce.us-east-1.vpce-svc-0ca73ac8b79058179"
+                },
+                {
+                    "SequenceNumber": 6,
+                    "Component": {
+                        "Id": "vpc-ingress-nfw-dev-nfw",
+                        "Arn": "arn:aws:network-firewall:us-east-1:404148889442:firewall/vpc-ingress-nfw-dev-nfw",
+                        "Name": "vpc-ingress-nfw-dev-nfw"
+                    },
+                    "FirewallStatelessRule": {
+                        "RuleGroupArn": "arn:aws:network-firewall:us-east-1:404148889442:firewall-policy/nfw-policy",
+                        "RuleAction": "forward_to_sfe",
+                        "Priority": -1
+                    },
+                    "FirewallStatefulRule": {
+                        "RuleGroupArn": "arn:aws:network-firewall:us-east-1:404148889442:stateful-rulegroup/vpc-ingress-nfw-dev-allow-traffic",
+                        "Sources": [
+                            "0.0.0.0/0"
+                        ],
+                        "Destinations": [
+                            "0.0.0.0/0"
+                        ],
+                        "SourcePorts": [
+                            {
+                                "From": 0,
+                                "To": 65535
+                            }
+                        ],
+                        "DestinationPorts": [
+                            {
+                                "From": 80,
+                                "To": 80
+                            }
+                        ],
+                        "Protocol": "TCP",
+                        "RuleAction": "pass",
+                        "Direction": "ANY"
+                    }
+                },
+                {
+                    "SequenceNumber": 7,
+                    "Component": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    },
+                    "ServiceName": "com.amazonaws.vpce.us-east-1.vpce-svc-0ca73ac8b79058179"
+                },
+                {
+                    "SequenceNumber": 8,
+                    "AttachedTo": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Component": {
+                        "Id": "eni-0751bf3dff0307daa",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0751bf3dff0307daa"
+                    },
+                    "Subnet": {
+                        "Id": "subnet-09dc31600429aa899",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-09dc31600429aa899",
+                        "Name": "vpc-ingress-nfw-dev-firewall-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 9,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": true,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 10,
+                    "Component": {
+                        "Id": "rtb-0999c9d33a8fb186f",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:route-table/rtb-0999c9d33a8fb186f",
+                        "Name": "vpc-ingress-nfw-dev-firewall-rt"
+                    },
+                    "RouteTableRoute": {
+                        "DestinationCidr": "10.0.0.0/16",
+                        "GatewayId": "local",
+                        "Origin": "createroutetable",
+                        "State": "active"
+                    }
+                },
+                {
+                    "SequenceNumber": 11,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": false,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 12,
+                    "Component": {
+                        "Id": "sg-042a598517a63d43c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:security-group/sg-042a598517a63d43c",
+                        "Name": "vpc-ingress-nfw-dev-webserver-sg-20260214151550297200000002"
+                    },
+                    "SecurityGroupRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Direction": "ingress",
+                        "PortRange": {
+                            "From": 80,
+                            "To": 80
+                        },
+                        "Protocol": "tcp"
+                    }
+                },
+                {
+                    "SequenceNumber": 13,
+                    "AttachedTo": {
+                        "Id": "i-04318aefe9d57e3c8",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:instance/i-04318aefe9d57e3c8",
+                        "Name": "vpc-ingress-nfw-dev-webserver"
+                    },
+                    "Component": {
+                        "Id": "eni-0ef3f9334a7a1312c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0ef3f9334a7a1312c"
+                    },
+                    "InboundHeader": {
+                        "DestinationAddresses": [
+                            "10.0.2.211/32"
+                        ],
+                        "DestinationPortRanges": [
+                            {
+                                "From": 80,
+                                "To": 80
+                            }
+                        ],
+                        "Protocol": "6",
+                        "SourceAddresses": [
+                            "0.0.0.0/5",
+                            "100.0.0.0/10",
+                            "100.128.0.0/9",
+                            "101.0.0.0/8",
+                            "102.0.0.0/7",
+                            "104.0.0.0/5",
+                            "11.0.0.0/8",
+                            "112.0.0.0/4",
+                            "12.0.0.0/6",
+                            "128.0.0.0/3",
+                            "16.0.0.0/4",
+                            "160.0.0.0/5",
+                            "168.0.0.0/6",
+                            "172.0.0.0/12",
+                            "172.128.0.0/9",
+                            "172.32.0.0/11",
+                            "172.64.0.0/10",
+                            "173.0.0.0/8",
+                            "174.0.0.0/7",
+                            "176.0.0.0/4",
+                            "192.0.0.0/9",
+                            "192.128.0.0/11",
+                            "192.160.0.0/13",
+                            "192.169.0.0/16",
+                            "192.170.0.0/15",
+                            "192.172.0.0/14",
+                            "192.176.0.0/12",
+                            "192.192.0.0/10",
+                            "193.0.0.0/8",
+                            "194.0.0.0/7",
+                            "196.0.0.0/6",
+                            "200.0.0.0/5",
+                            "208.0.0.0/4",
+                            "224.0.0.0/3",
+                            "32.0.0.0/3",
+                            "64.0.0.0/3",
+                            "8.0.0.0/7",
+                            "96.0.0.0/6"
+                        ],
+                        "SourcePortRanges": [
+                            {
+                                "From": 0,
+                                "To": 442
+                            },
+                            {
+                                "From": 444,
+                                "To": 65535
+                            }
+                        ]
+                    },
+                    "Subnet": {
+                        "Id": "subnet-0d5b2777442c877d8",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-0d5b2777442c877d8",
+                        "Name": "vpc-ingress-nfw-dev-webserver-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                }
+            ],
+            "ReturnPathComponents": [
+                {
+                    "SequenceNumber": 1,
+                    "AttachedTo": {
+                        "Id": "i-04318aefe9d57e3c8",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:instance/i-04318aefe9d57e3c8",
+                        "Name": "vpc-ingress-nfw-dev-webserver"
+                    },
+                    "Component": {
+                        "Id": "eni-0ef3f9334a7a1312c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0ef3f9334a7a1312c"
+                    },
+                    "OutboundHeader": {
+                        "DestinationAddresses": [
+                            "0.0.0.0/5",
+                            "100.0.0.0/10",
+                            "100.128.0.0/9",
+                            "101.0.0.0/8",
+                            "102.0.0.0/7",
+                            "104.0.0.0/5",
+                            "11.0.0.0/8",
+                            "112.0.0.0/4",
+                            "12.0.0.0/6",
+                            "128.0.0.0/3",
+                            "16.0.0.0/4",
+                            "160.0.0.0/5",
+                            "168.0.0.0/6",
+                            "172.0.0.0/12",
+                            "172.128.0.0/9",
+                            "172.32.0.0/11",
+                            "172.64.0.0/10",
+                            "173.0.0.0/8",
+                            "174.0.0.0/7",
+                            "176.0.0.0/4",
+                            "192.0.0.0/9",
+                            "192.128.0.0/11",
+                            "192.160.0.0/13",
+                            "192.169.0.0/16",
+                            "192.170.0.0/15",
+                            "192.172.0.0/14",
+                            "192.176.0.0/12",
+                            "192.192.0.0/10",
+                            "193.0.0.0/8",
+                            "194.0.0.0/7",
+                            "196.0.0.0/6",
+                            "200.0.0.0/5",
+                            "208.0.0.0/4",
+                            "224.0.0.0/3",
+                            "32.0.0.0/3",
+                            "64.0.0.0/3",
+                            "8.0.0.0/7",
+                            "96.0.0.0/6"
+                        ],
+                        "DestinationPortRanges": [
+                            {
+                                "From": 0,
+                                "To": 442
+                            },
+                            {
+                                "From": 444,
+                                "To": 65535
+                            }
+                        ],
+                        "Protocol": "6",
+                        "SourceAddresses": [
+                            "10.0.2.211/32"
+                        ],
+                        "SourcePortRanges": [
+                            {
+                                "From": 80,
+                                "To": 80
+                            }
+                        ]
+                    },
+                    "Subnet": {
+                        "Id": "subnet-0d5b2777442c877d8",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-0d5b2777442c877d8",
+                        "Name": "vpc-ingress-nfw-dev-webserver-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 2,
+                    "Component": {
+                        "Id": "sg-042a598517a63d43c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:security-group/sg-042a598517a63d43c",
+                        "Name": "vpc-ingress-nfw-dev-webserver-sg-20260214151550297200000002"
+                    }
+                },
+                {
+                    "SequenceNumber": 3,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": true,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 4,
+                    "Component": {
+                        "Id": "rtb-0296efba1e5da7f45",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:route-table/rtb-0296efba1e5da7f45",
+                        "Name": "vpc-ingress-nfw-dev-webserver-rt"
+                    },
+                    "RouteTableRoute": {
+                        "DestinationCidr": "0.0.0.0/0",
+                        "GatewayId": "vpce-0f450ec282d62fa5d",
+                        "Origin": "createroute",
+                        "State": "active"
+                    }
+                },
+                {
+                    "SequenceNumber": 5,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": false,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 6,
+                    "AttachedTo": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Component": {
+                        "Id": "eni-0751bf3dff0307daa",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0751bf3dff0307daa"
+                    },
+                    "Subnet": {
+                        "Id": "subnet-09dc31600429aa899",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-09dc31600429aa899",
+                        "Name": "vpc-ingress-nfw-dev-firewall-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 7,
+                    "Component": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    },
+                    "ServiceName": "com.amazonaws.vpce.us-east-1.vpce-svc-0ca73ac8b79058179"
+                },
+                {
+                    "SequenceNumber": 8,
+                    "Component": {
+                        "Id": "vpc-ingress-nfw-dev-nfw",
+                        "Arn": "arn:aws:network-firewall:us-east-1:404148889442:firewall/vpc-ingress-nfw-dev-nfw",
+                        "Name": "vpc-ingress-nfw-dev-nfw"
+                    },
+                    "FirewallStatelessRule": {
+                        "RuleGroupArn": "arn:aws:network-firewall:us-east-1:404148889442:firewall-policy/nfw-policy",
+                        "RuleAction": "forward_to_sfe",
+                        "Priority": -1
+                    }
+                },
+                {
+                    "SequenceNumber": 9,
+                    "Component": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    },
+                    "ServiceName": "com.amazonaws.vpce.us-east-1.vpce-svc-0ca73ac8b79058179"
+                },
+                {
+                    "SequenceNumber": 10,
+                    "AttachedTo": {
+                        "Id": "vpce-0f450ec282d62fa5d",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc-endpoint/vpce-0f450ec282d62fa5d",
+                        "Name": "vpc-ingress-nfw-dev-nfw (us-east-1a)"
+                    },
+                    "Component": {
+                        "Id": "eni-0751bf3dff0307daa",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-interface/eni-0751bf3dff0307daa"
+                    },
+                    "Subnet": {
+                        "Id": "subnet-09dc31600429aa899",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:subnet/subnet-09dc31600429aa899",
+                        "Name": "vpc-ingress-nfw-dev-firewall-subnet"
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                },
+                {
+                    "SequenceNumber": 11,
+                    "AclRule": {
+                        "Cidr": "0.0.0.0/0",
+                        "Egress": true,
+                        "Protocol": "all",
+                        "RuleAction": "allow",
+                        "RuleNumber": 100
+                    },
+                    "Component": {
+                        "Id": "acl-07296070a9f1edc4c",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:network-acl/acl-07296070a9f1edc4c"
+                    }
+                },
+                {
+                    "SequenceNumber": 12,
+                    "Component": {
+                        "Id": "rtb-0999c9d33a8fb186f",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:route-table/rtb-0999c9d33a8fb186f",
+                        "Name": "vpc-ingress-nfw-dev-firewall-rt"
+                    },
+                    "RouteTableRoute": {
+                        "DestinationCidr": "0.0.0.0/0",
+                        "GatewayId": "igw-09ffb3709940e4dff",
+                        "Origin": "createroute",
+                        "State": "active"
+                    }
+                },
+                {
+                    "SequenceNumber": 13,
+                    "Component": {
+                        "Id": "igw-09ffb3709940e4dff",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:internet-gateway/igw-09ffb3709940e4dff",
+                        "Name": "vpc-ingress-nfw-dev-igw"
+                    },
+                    "OutboundHeader": {
+                        "DestinationAddresses": [
+                            "0.0.0.0/5",
+                            "100.0.0.0/10",
+                            "100.128.0.0/9",
+                            "101.0.0.0/8",
+                            "102.0.0.0/7",
+                            "104.0.0.0/5",
+                            "11.0.0.0/8",
+                            "112.0.0.0/4",
+                            "12.0.0.0/6",
+                            "128.0.0.0/3",
+                            "16.0.0.0/4",
+                            "160.0.0.0/5",
+                            "168.0.0.0/6",
+                            "172.0.0.0/12",
+                            "172.128.0.0/9",
+                            "172.32.0.0/11",
+                            "172.64.0.0/10",
+                            "173.0.0.0/8",
+                            "174.0.0.0/7",
+                            "176.0.0.0/4",
+                            "192.0.0.0/9",
+                            "192.128.0.0/11",
+                            "192.160.0.0/13",
+                            "192.169.0.0/16",
+                            "192.170.0.0/15",
+                            "192.172.0.0/14",
+                            "192.176.0.0/12",
+                            "192.192.0.0/10",
+                            "193.0.0.0/8",
+                            "194.0.0.0/7",
+                            "196.0.0.0/6",
+                            "200.0.0.0/5",
+                            "208.0.0.0/4",
+                            "224.0.0.0/3",
+                            "32.0.0.0/3",
+                            "64.0.0.0/3",
+                            "8.0.0.0/7",
+                            "96.0.0.0/6"
+                        ],
+                        "DestinationPortRanges": [
+                            {
+                                "From": 0,
+                                "To": 442
+                            },
+                            {
+                                "From": 444,
+                                "To": 65535
+                            }
+                        ],
+                        "Protocol": "6",
+                        "SourceAddresses": [
+                            "35.169.9.203/32"
+                        ],
+                        "SourcePortRanges": [
+                            {
+                                "From": 80,
+                                "To": 80
+                            }
+                        ]
+                    },
+                    "Vpc": {
+                        "Id": "vpc-02a5ce360ebe9a0cd",
+                        "Arn": "arn:aws:ec2:us-east-1:404148889442:vpc/vpc-02a5ce360ebe9a0cd",
+                        "Name": "vpc-ingress-nfw-dev-vpc"
+                    }
+                }
+            ],
+            "Tags": [
+                {
+                    "Key": "ManagedBy",
+                    "Value": "reachability-ingress-test.sh"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "ingress-test-analysis"
+                }
+            ]
+        }
+    ]
+}
